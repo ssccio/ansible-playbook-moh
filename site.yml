@@ -1,0 +1,46 @@
+---
+- name: Convert input file to sln 8Kb format for Asterisk
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Determine input file name
+      shell: ls files/
+      register: moh
+
+    - name: convert audio file to sln
+      command: sox files/{{ item }} -t raw -r 8000 -c 1 files/music-on-hold.sln
+      tags: convert
+      loop: "{{ moh.stdout_lines }}"
+
+    - name: Clean up input
+      file:
+        path: files/{{ item }}
+        state: absent
+      loop: "{{ moh.stdout_lines }}"
+
+- name: Install music on hold
+  hosts: pbx
+  become: true
+  tasks:
+    - name: Back up moh
+      copy:
+        src: music-on-hold.sln
+        dest: /home/ken/messages/music-on-hold-{{ ansible_date_time.date }}.sln
+        owner: asterisk
+        group: asterisk
+      tags: backup
+
+    - name: send moh to pbx
+      copy:
+        src: music-on-hold.sln
+        dest: /var/lib/asterisk/moh/music-on-hold.sln
+        owner: asterisk
+        group: asterisk
+    
+    - name: Reload MOH in Asterisk
+      command: /sbin/asterisk -rx "moh reload"
+
+    - name: Clean up sln
+      file:
+        path: files/music-on-hold.sln
+        state: absent
