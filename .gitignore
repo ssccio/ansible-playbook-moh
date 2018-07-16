@@ -1,5 +1,4 @@
 files
 files/*
 inventory
-vars
-vars/*
+vars/main.yml
