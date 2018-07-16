@@ -25,11 +25,13 @@
 - name: Install music on hold
   hosts: pbx
   become: true
+  vars:
+    backuppath: /home/ken/messages
   tasks:
     - name: Back up moh
       copy:
         src: music-on-hold.sln
-        dest: "{{ backup_path}}/music-on-hold-{{ ansible_date_time.date }}.sln
+        dest: "{{ backuppath }}/music-on-hold-{{ ansible_date_time.date }}.sln"
         owner: asterisk
         group: asterisk
       tags: backup
@@ -44,6 +46,10 @@
     - name: Reload MOH in Asterisk
       command: /sbin/asterisk -rx "moh reload"
 
+- name: Remove output files
+  hosts: localhost
+  connection: local
+  tasks:
     - name: Clean up sln
       file:
         path: files/music-on-hold.sln

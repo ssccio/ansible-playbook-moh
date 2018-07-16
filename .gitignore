@@ -2,3 +2,4 @@ files
 files/*
 inventory
 vars/main.yml
+*.retry
